@@ -1,0 +1,23 @@
+---
+- name: Verify
+  hosts: all
+  tasks:
+    - name: Check if vector is installed
+      ansible.builtin.command: vector --version
+      changed_when: false
+      register: vector_version
+
+    - name: Display vector version
+      ansible.builtin.debug:
+        msg: "{{ vector_version.stdout }}"
+
+    - name: Check vector config
+      ansible.builtin.stat:
+        path: /etc/vector/vector.toml
+      register: vector_config
+
+    - name: Assert config exists
+      ansible.builtin.assert:
+        that:
+          - vector_config.stat.exists
+

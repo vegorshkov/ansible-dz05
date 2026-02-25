@@ -1,0 +1,30 @@
+---
+- name: Set hostnames for all servers
+  hosts: all
+  become: true
+  tasks:
+    - name: Set hostname based on inventory
+      ansible.builtin.hostname:
+        name: "{{ inventory_hostname }}"
+      when: ansible_hostname != inventory_hostname
+
+
+- name: Install Clickhouse
+  hosts: clickhouse
+  become: true
+  roles:
+    - clickhouse
+
+
+- name: Install Vector
+  hosts: vector
+  become: true
+  roles:
+    - vector
+
+
+- name: Install Lighthouse
+  hosts: lighthouse
+  become: true
+  roles:
+    - lighthouse

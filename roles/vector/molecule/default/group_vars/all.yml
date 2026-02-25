@@ -1,0 +1,5 @@
+---
+# Переменные для тестирования роли vector
+vector_version: "0.21.0"
+vector_config_dir: "/etc/vector"
+
