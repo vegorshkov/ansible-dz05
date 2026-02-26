@@ -20,4 +20,3 @@
       ansible.builtin.assert:
         that:
           - vector_config.stat.exists
-

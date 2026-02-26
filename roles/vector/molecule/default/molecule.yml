@@ -1,6 +1,40 @@
 ---
+# Молекула конфиг для тестирования vector-роли с Docker
+
+driver:
+  name: docker
+  options:
+    log: true
+
 platforms:
-  - name: instance
-    # you might want to add your own variables here based on what provisioning
-    # you are doing like:
-    # image: quay.io/centos/centos:stream8
+  - name: vector-test-01
+    image: centos:7
+    pre_build_image: true
+    command: /sbin/init
+    privileged: true
+    cgroupns_mode: host
+    volumes:
+      - /sys/fs/cgroup:/sys/fs/cgroup:rw
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    groups:
+      - vector_group
+
+provisioner:
+  name: ansible
+  playbooks:
+    converge: converge.yml
+  config_options:
+    defaults:
+      stdout_callback: yaml
+      show_diff: true
+  env:
+    ANSIBLE_FORCE_COLOR: "true"
+
+verifier:
+  name: ansible
+
+dependency:
+  name: galaxy
+  options:
+    ignore-errors: true
+
