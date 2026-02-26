@@ -36,5 +36,6 @@ default — имя нового сценария. Сценарий — это «
 ![alt text](image-11.png)
 
 Тест пройден, преведущая конфигурация удалена через molecule destroy
+![alt text](image-12.png)
 
 
