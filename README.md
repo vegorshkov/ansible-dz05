@@ -208,3 +208,44 @@ TOX
 
 Vector работает, конфиг валидный, версия правильная!
 
+ClickHouse роль:
+
+![alt text](image-46.png)
+
+    Устанавливает зависимости (git, nginx)
+
+    Клонирует репозиторий Lighthouse
+
+    Настраивает nginx для работы с Lighthouse
+
+    Запускает и включает nginx
+
+Сценарий тестирования (molecule/ubuntu):
+
+    create - создаёт Docker контейнер с Ubuntu 22.04
+    prepare - устанавливает Python и зависимости
+    converge - применяет роль Lighthouse
+    verify - проверяет:
+
+        Процесс nginx запущен
+
+        Файлы Lighthouse существуют
+
+        Lighthouse отвечает на порту 8080
+
+Проверка СТЕКА всех ролей:
+
+![alt text](image-47.png)
+
+Для памяти:
+molecule test -s stack --destroy=never
+
+![alt text](image-48.png)
+![alt text](image-49.png)
+![alt text](image-50.png)
+![alt text](image-51.png)
+![alt text](image-52.png)
+![alt text](image-53.png)
+![alt text](image-54.png)
+
+Думаю что проще доустановить systems в контейнер для клика.  Иначе трабл с правами пользователя клик (хотя права повышал)

@@ -1,0 +1,19 @@
+---
+- name: Prepare - Install Python and dependencies
+  hosts: all
+  gather_facts: false
+  tasks:
+    - name: Update apt cache
+      raw: apt-get update
+      become: false
+      changed_when: false
+      
+    - name: Install Python 3, sudo, ca-certificates and gnupg
+      raw: apt-get install -y python3-minimal sudo ca-certificates gnupg
+      become: false
+      changed_when: false
+      
+    - name: Update CA certificates
+      raw: update-ca-certificates --fresh
+      become: false
+      changed_when: false

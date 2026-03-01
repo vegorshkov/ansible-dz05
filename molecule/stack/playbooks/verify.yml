@@ -1,0 +1,21 @@
+---
+- name: Verify
+  hosts: all
+  gather_facts: false
+  tasks:
+    - name: Check ClickHouse
+      command: clickhouse-client --query "SELECT version()"
+      register: clickhouse_version
+      failed_when: clickhouse_version.rc != 0
+
+    - name: Check Vector
+      command: vector --version
+      register: vector_version
+      failed_when: vector_version.rc != 0
+
+    - name: Check Lighthouse
+      uri:
+        url: http://localhost:8080
+        status_code: 200
+      register: lighthouse_response
+      failed_when: lighthouse_response.status != 200
