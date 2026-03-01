@@ -1,6 +1,10 @@
 ---
-- name: Restart vector
-  ansible.builtin.service:
-    name: vector
-    state: restarted
+- name: Start vector service
+  become: true
+  ansible.builtin.command: vector --config /etc/vector/vector.yaml
+  args:
+    creates: /var/run/vector.pid
+  async: 10
+  poll: 2
+  changed_when: false
 

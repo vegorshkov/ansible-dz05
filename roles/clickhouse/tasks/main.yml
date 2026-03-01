@@ -16,14 +16,8 @@
 
 - include_tasks: params.yml
   tags: [always]
-  
-- name: Allow external connections to ClickHouse
-  ansible.builtin.replace:
-    path: /etc/clickhouse-server/config.xml
-    regexp: '<listen_host>.*</listen_host>'
-    replace: '<listen_host>0.0.0.0</listen_host>'
-  notify: Restart clickhouse
 
+# Установка ClickHouse
 - include_tasks:
     file: "{{ lookup('first_found', params) }}"
     apply:
@@ -34,6 +28,15 @@
         - "install/{{ ansible_pkg_mgr }}.yml"
         - 'empty.yml'
   tags: [install]
+  when: not clickhouse_remove|bool
+
+# Настройка ClickHouse (после установки)
+- name: Allow external connections to ClickHouse
+  ansible.builtin.replace:
+    path: /etc/clickhouse-server/config.xml
+    regexp: '<listen_host>.*</listen_host>'
+    replace: '<listen_host>0.0.0.0</listen_host>'
+  notify: Restart clickhouse
   when: not clickhouse_remove|bool
 
 - include_tasks: 
@@ -75,3 +78,4 @@
       tags: [remove]
   tags: [remove]
   when: clickhouse_remove|bool
+

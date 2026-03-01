@@ -2,52 +2,52 @@
 #Main installation actions
 #https://clickhouse.com/docs/en/getting-started/#installation
 
-- name: Install by APT | Apt-key add repo key
-  apt_key:
-    keyserver: "{{ clickhouse_repo_keyserver }}"
-    id: "{{ clickhouse_repo_key }}"
-  become: true
-  tags: [install]
-
-- name: Install by APT | Remove old repo
-  apt_repository:
-    repo: "{{ clickhouse_repo_old }}"
-    state: absent
-  become: true
-  when: clickhouse_repo_old is defined
-  tags: [install]
-
-- name: Install by APT | Repo installation
-  apt_repository:
-    repo: "{{ clickhouse_repo }}"
-    state: present
-  become: true
-  tags: [install]
-
-- name: Install by APT | Package installation
+- name: Install by APT | Update cache
   apt:
-    name: "{{ clickhouse_package | map('regex_replace', '$', '=' + clickhouse_version) | list }}"
-    state: present
-    update_cache: true
-  become: true
-  when: clickhouse_version != 'latest'
-  tags: [install]
+    update_cache: yes
+  become: false
 
-- name: Install by APT | Package installation
+- name: Install by APT | Install dependencies
   apt:
-    name: "{{ clickhouse_package }}"
-    state: "{{ clickhouse_version }}"
-    update_cache: true
-  become: true
-  when: clickhouse_version == 'latest'
-  tags: [install]
+    name:
+      - curl
+      - wget
+      - gnupg2
+      - apt-transport-https
+      - ca-certificates
+    state: present
+  become: false
+
+- name: Install by APT | Add ClickHouse GPG key
+  shell: |
+    curl -fsSL 'https://packages.clickhouse.com/rpm/lts/repodata/repomd.xml.key' | gpg --dearmor -o /usr/share/keyrings/clickhouse-keyring.gpg
+  args:
+    creates: /usr/share/keyrings/clickhouse-keyring.gpg
+  become: false
+
+- name: Install by APT | Add ClickHouse repository
+  apt_repository:
+    repo: "deb [signed-by=/usr/share/keyrings/clickhouse-keyring.gpg] https://packages.clickhouse.com/deb stable main"
+    state: present
+    update_cache: yes
+  become: false
+
+- name: Install by APT | Install ClickHouse
+  apt:
+    name:
+      - clickhouse-server
+      - clickhouse-client
+    state: present
+    update_cache: yes
+  become: false
 
 - name: Hold specified version during APT upgrade | Package installation
-  become: true
+  become: false
   copy:
-    dest: "/etc/apt/preferences.d/fixed-{{ item }}"
+    dest: "/etc/apt/preferences.d/fixed-clickhouse"
     content: |
-      Package: {{ item }}
+      Package: clickhouse-server
       Pin: release a=now
       Pin-Priority: 1001
-  loop: "{{ clickhouse_package }}"
+  when: false  # Отключено, можно включить если нужно зафиксировать версию
+

@@ -38,4 +38,155 @@ default — имя нового сценария. Сценарий — это «
 Тест пройден, преведущая конфигурация удалена через molecule destroy
 ![alt text](image-12.png)
 
+перешел на ubuntu, так как на альт 10  не стартовали докер контейнеры.
+
+на ubuntu провожу траблшутинг
+
+![alt text](image-13.png)
+
+Столкнулся с пролеммой, что молекула установилась в локальное окружение в то время как ансибл с библиотеками установлены в системное окружения.
+
+Видны ошибки путей.
+Как одно из решений, для последующего "анти-изменения" думаю разметить все в одном месте - в проекте.
+
+Создадим единое окружение для molecule и ansible:
+
+1) Создим виртуальное окружение в папке проекта
+cd ~/STUDENT/ansible-dz05
+python3 -m venv venv
+source venv/bin/activate
+
+2) Установим всё в одном месте
+pip install ansible molecule molecule-plugins[docker]
+ansible-galaxy collection install ansible.posix community.docker
+
+3) Теперь всё в одном окружении, пути синхронизированы
+molecule --version
+which ansible  # покажет ./venv/bin/ansible
+
+4) Устанавливаем molecule
+
+pip install ansible molecule-plugins[docker]
+# Optionally, install a verifier like testinfra
+pip install pytest-testinfra ansible-lint yamllint
+
+
+![alt text](image-14.png)
+![alt text](image-15.png)
+![alt text](image-16.png)
+![alt text](image-17.png)
+
+Инициализируем стандартный сценарий:
+```
+molecule init scenario default
+```
+
+![alt text](image-18.png)
+
+Скорректировал структуру molecule.yml
+![alt text](image-19.png)
+
+![alt text](image-20.png)
+
+![alt text](image-21.png)
+
+Запустили molecule test
+![alt text](image-22.png)
+
+![alt text](image-23.png)
+
+Пересоздаем виртуальное окружение:
+
+![alt text](image-24.png)
+
+![alt text](image-25.png)
+
+![alt text](<Снимок экрана от 2026-03-01 13-33-35.png>)
+
+![alt text](<Снимок экрана от 2026-03-01 13-39-58.png>)
+
+![alt text](<Снимок экрана от 2026-03-01 14-01-49.png>)
+
+![alt text](image-26.png)
+
+Нашли что не ставиться нормально клик - фиксим.
+![alt text](image-27.png)
+
+Установка проходит, но требует sudo
+![alt text](image-28.png)
+
+Выполняется процесс установки:
+![alt text](image-29.png)
+
+Роад МАП:
+
+Нашли самые сложные подводные камни:
+Что уже преодолено:
+
+-Конфликты версий Molecule и Ansible
+
+-Проблема с http+docker
+
+-Отсутствие Python в контейнере
+
+-Неправильный порядок задач в роли
+
+-Отсутствие sudo в контейнере
+
+-Добавление репозитория ClickHouse
+
+-Установка ClickHouse
+
+![alt text](image-30.png)
+
+Полный тест:
+
+![alt text](image-31.png)
+
+Полный вывод сценария: [text](roles/clickhouse/clickhouse_scenario.txt)
+
+
+Осталось vector:
+
+![alt text](image-32.png)
+
+Команды:
+```
+  Уничтожить старые контейнеры
+molecule destroy
+
+  Создать заново
+molecule create
+  Подготовить контейнер (установить Python и зависимости)
+molecule prepare
+
+  Применить роль vector
+molecule converge
+
+  Проверить результат
+molecule verify
+
+  Если всё хорошо, можно запустить полный тест
+molecule test
+```
+![alt text](image-33.png)
+
+![alt text](image-34.png)
+
+Запускаем полную проверку:
+![alt text](image-35.png)
+
+Корректирую и запускаем
+
+![alt text](image-36.png)
+
+![alt text](image-37.png)
+
+
+Круто, Думал что мозг взорвется :-)
+
+
+TOX
+
+![alt text](image-39.png)
 

@@ -3,33 +3,47 @@
   hosts: localhost
   connection: local
   gather_facts: false
-  # no_log: "{{ molecule_no_log }}"
+  no_log: "{{ molecule_no_log }}"
   tasks:
-    # TODO: Developer must implement and populate 'server' variable
+    - name: Create Dockerfiles from image names
+      template:
+        src: "{{ molecule_scenario_directory }}/Dockerfile.j2"
+        dest: "{{ molecule_ephemeral_directory }}/Dockerfile_{{ item.image }}"
+      with_items: "{{ molecule_yml.platforms }}"
+      when: not item.pre_build_image | default(false)
+      register: platforms
 
-    - name: Create instance config
-      when: server.changed | default(false) | bool  # noqa no-handler
-      block:
-        - name: Populate instance config dict  # noqa jinja
-          ansible.builtin.set_fact:
-            instance_conf_dict: {}
-            # instance': "{{ }}",
-            # address': "{{ }}",
-            # user': "{{ }}",
-            # port': "{{ }}",
-            # 'identity_file': "{{ }}", }
-          with_items: "{{ server.results }}"
-          register: instance_config_dict
+    - name: Build an Ansible compatible image
+      docker_image:
+        name: "{{ item.item.image }}"
+        source: build
+        build:
+          path: "{{ molecule_ephemeral_directory }}"
+          dockerfile: "{{ item.dest }}"
+        force_source: true
+      with_items: "{{ platforms.results }}"
+      when: not item.skipped
 
-        - name: Convert instance config dict to a list
-          ansible.builtin.set_fact:
-            instance_conf: "{{ instance_config_dict.results | map(attribute='ansible_facts.instance_conf_dict') | list }}"
+    - name: Create molecule instance(s)
+      docker_container:
+        name: "{{ item.name }}"
+        hostname: "{{ item.hostname | default(item.name) }}"
+        image: "{{ item.image }}"
+        state: started
+        recreate: false
+        log_driver: syslog
+        command: "{{ item.command | default('bash -c \"while true; do sleep 10000; done\"') }}"
+        privileged: "{{ item.privileged | default(False) }}"
+        volumes: "{{ item.volumes | default(omit) }}"
+        capabilities: "{{ item.capabilities | default(omit) }}"
+        ports: "{{ item.ports | default(omit) }}"
+        env: "{{ item.env | default(omit) }}"
+        dns_servers: "{{ item.dns_servers | default(omit) }}"
+      with_items: "{{ molecule_yml.platforms }}"
 
-        - name: Dump instance config
-          ansible.builtin.copy:
-            content: |
-              # Molecule managed
+    - name: Wait for instance(s) creation to complete
+      wait_for:
+        timeout: "{{ item.wait_timeout | default(300) }}"
+      with_items: "{{ molecule_yml.platforms }}"
 
-              {{ instance_conf | to_json | from_json | to_yaml }}
-            dest: "{{ molecule_instance_config }}"
-            mode: "0600"
+
