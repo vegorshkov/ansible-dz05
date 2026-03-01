@@ -11,5 +11,5 @@
   ansible.builtin.apt:
     deb: "/tmp/vector-{{ vector_version }}.deb"
     state: present
-  notify: Start vector service
+#  notify: Start vector service
 
